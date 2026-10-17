@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "B站直播自动录制",
+  "version": "1.2.0",
+  "description": "输入一个或多个 Bilibili 直播间 URL，自动等待开播并在后台保存为 AVI，无需保持直播间页面打开。",
+  "minimum_chrome_version": "116",
+  "permissions": [
+    "alarms",
+    "downloads",
+    "notifications",
+    "offscreen",
+    "storage",
+    "unlimitedStorage"
+  ],
+  "host_permissions": [
+    "https://api.live.bilibili.com/*",
+    "https://*.bilivideo.com/*",
+    "https://live.bilibili.com/*",
+    "https://b23.tv/*",
+    "https://*.hdslb.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'; worker-src 'self'"
+  },
+  "action": {
+    "default_title": "打开 B站直播自动录制",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "options_page": "app.html"
+}

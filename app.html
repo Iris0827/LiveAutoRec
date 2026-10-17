@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark">
+    <title>B站直播自动录制</title>
+    <link rel="stylesheet" href="app.css">
+  </head>
+  <body>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="brand-play"></span>
+        </div>
+        <div>
+          <div class="brand-title">B站直播自动录制</div>
+          <div class="brand-subtitle">BILIBILI LIVE ARCHIVER</div>
+        </div>
+      </div>
+      <div class="global-status" id="globalStatus">
+        <span class="status-dot"></span>
+        <span id="globalStatusText">后台待命</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="column-main">
+        <section class="hero card">
+          <div class="eyebrow">支持单个或批量直播间地址</div>
+          <h1>错过直播，<span>录像还在。</span></h1>
+          <p class="hero-copy">
+            可以一次粘贴多个直播间 URL。扩展会在后台等待开播、持续录制并自动转成 AVI，
+            你不用打开直播间，也可以随时关掉这个控制台页面。
+          </p>
+
+          <form id="addForm" class="add-form" autocomplete="off">
+            <label class="sr-only" for="roomUrl">直播间地址</label>
+            <div class="url-field">
+              <span class="url-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18">
+                  <path d="M10.6 13.4a3 3 0 0 0 4.24 0l2.3-2.3a3 3 0 0 0-4.25-4.24l-1.31 1.31" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                  <path d="M13.4 10.6a3 3 0 0 0-4.24 0l-2.3 2.3a3 3 0 0 0 4.25 4.24l1.31-1.31" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </span>
+              <textarea
+                id="roomUrl"
+                name="roomUrl"
+                spellcheck="false"
+                rows="2"
+                placeholder="https://live.bilibili.com/12345&#10;https://live.bilibili.com/67890"
+                aria-describedby="roomUrlHint"
+              ></textarea>
+              <button id="addButton" class="button button-primary" type="submit">
+                <span>批量添加</span>
+              </button>
+            </div>
+            <div class="field-foot">
+              <span id="roomUrlHint">每行一个；支持直播间 URL、房间号和 b23.tv 短链接</span>
+              <span class="shortcut-hint">最多 20 个</span>
+            </div>
+          </form>
+        </section>
+
+        <section class="card list-card">
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">监控队列</div>
+              <h2>我的直播间</h2>
+            </div>
+            <div class="count-pill" id="taskCount">0</div>
+          </div>
+
+          <div id="taskList" class="task-list" aria-live="polite">
+            <div class="loading-state"><span class="spinner"></span>正在读取监控列表</div>
+          </div>
+        </section>
+
+        <section id="pendingSection" class="card list-card pending-card" hidden>
+          <div class="section-heading">
+            <div>
+              <div class="eyebrow">待处理</div>
+              <h2>浏览器暂存录像</h2>
+            </div>
+            <div class="count-pill count-warn" id="pendingCount">0</div>
+          </div>
+          <p class="section-note">
+            这些文件已经录制完成，但自动下载没有成功。选择保存位置即可导出。
+          </p>
+          <div id="pendingList" class="pending-list"></div>
+        </section>
+      </section>
+
+      <aside class="column-side">
+        <section class="card settings-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <div class="eyebrow">录制设置</div>
+              <h2>保存方式</h2>
+            </div>
+          </div>
+
+          <div class="save-mode-switch" role="group" aria-label="保存方式">
+            <button class="mode-button active" type="button" data-save-mode="download">
+              <span class="mode-icon">↓</span>
+              <span>
+                <strong>自动下载</strong>
+                <small>结束后进下载目录</small>
+              </span>
+            </button>
+            <button class="mode-button" type="button" data-save-mode="folder">
+              <span class="mode-icon">▣</span>
+              <span>
+                <strong>直接写文件夹</strong>
+                <small>适合超长直播</small>
+              </span>
+            </button>
+          </div>
+
+          <div id="folderRow" class="setting-row folder-row" hidden>
+            <div>
+              <div class="setting-label">录像文件夹</div>
+              <div class="setting-value" id="folderName">尚未选择</div>
+            </div>
+            <button id="chooseFolderButton" class="button button-quiet" type="button">
+              选择文件夹
+            </button>
+          </div>
+
+          <div class="setting-row">
+            <label for="qualitySelect">
+              <span class="setting-label">录播画质</span>
+              <span class="setting-value">以账号实际可用画质为准</span>
+            </label>
+            <select id="qualitySelect" class="select">
+              <option value="best">最高可用</option>
+              <option value="1080p">1080P</option>
+              <option value="720p">720P</option>
+              <option value="480p">480P</option>
+            </select>
+          </div>
+
+          <div class="setting-row">
+            <label for="notifyToggle">
+              <span class="setting-label">桌面通知</span>
+              <span class="setting-value">开播、保存和出错时提醒</span>
+            </label>
+            <label class="switch">
+              <input id="notifyToggle" type="checkbox" checked>
+              <span class="switch-track"></span>
+            </label>
+          </div>
+
+          <div class="quality-note">
+            <span class="note-mark">i</span>
+            <span>
+              高清原画通常需要先在 Edge 登录 B站。未登录时，接口可能只提供 480P。
+              <button id="loginButton" class="text-button" type="button">打开登录页</button>
+            </span>
+          </div>
+        </section>
+
+        <section class="card info-card">
+          <div class="info-title"><span class="live-ring"></span>后台录制中</div>
+          <p>
+            浏览器需要保持运行。Edge 完全退出、电脑休眠或断网时无法继续拉取直播分片。
+          </p>
+          <div class="info-divider"></div>
+          <div class="format-row">
+            <span>文件格式</span>
+            <strong>.avi</strong>
+          </div>
+          <div class="format-row">
+            <span>单段时长</span>
+            <strong>最长 2 小时，超出 _P2</strong>
+          </div>
+          <div class="format-row">
+            <span>推荐播放器</span>
+            <strong>PotPlayer / VLC</strong>
+          </div>
+          <p class="mini-note">
+            使用本地 FFmpeg WASM 转封装，保留原始音视频。超过 2 小时自动保存为 _P2、
+            _P3 等分段文件。
+          </p>
+        </section>
+
+        <section class="card small-note">
+          <strong>隐私说明</strong>
+          <p>只访问 Bilibili 直播接口和你填写的直播间，不上传录像，也不需要额外的云端服务。</p>
+        </section>
+      </aside>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

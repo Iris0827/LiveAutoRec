@@ -1,0 +1,11 @@
+# Local browser QA profiles and generated screenshots
+.tmp-*/
+.tmp-*.png
+
+# Build/install duplicates of the unpacked extension
+release/bilibili-live-archiver-edge/
+node_modules/
+
+# OS metadata
+.DS_Store
+Thumbs.db
